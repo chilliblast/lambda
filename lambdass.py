@@ -11,20 +11,18 @@ instance = ec2.describe_instances(
                 }
         ]
 )
-#print("Raw instance variable data is: ",instance)
-instlen = len(instance['Reservations'])
-print("Instance Length is ",instlen)
+reslen = len(instance['Reservations']); r_count = 0
 
-count = 0
-
-while count < instlen:
-        print("Count variable is: ", count)
-        instance_name = instance['Reservations'][count]['Instances'][0]['PrivateDnsName']
-        instance_id = instance['Reservations'][count]['Instances'][0]['InstanceId']
-        print("Instance Name is: ",instance_name)
-        print("Instance ID is: ",instance_id)
-        count = count + 1
-
-print("\n")
-instlen = len(instance['Reservations'])
-print("Number of items (instances) returned is: ",instlen)
+while r_count < reslen:
+	inslen = len(instance['Reservations'][r_count]['Instances'])
+	print("Instance List size is: ",inslen)
+	i_count = 0
+	while i_count < inslen:
+		print("i_count variable is: ", i_count)
+		instance_name = instance['Reservations'][r_count]['Instances'][i_count]['PrivateDnsName']
+		print("instance name is: ", instance_name)
+		instance_id = instance['Reservations'][r_count]['Instances'][i_count]['InstanceId']
+		print("instance id is: ", instance_id)
+		i_count = i_count + 1
+	print("r_count variable is: ", r_count)
+	r_count = r_count + 1
