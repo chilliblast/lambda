@@ -21,15 +21,16 @@ def analyse_cloudtrail_output(instanceid,event):
 		LookupAttributes=[
 			{
 				'AttributeKey':	'EventName',
-				'AttributeValue': 'StartInstances'
+				'AttributeValue': 'RunInstances'
 			},
 		],
 		MaxResults=1000,
 	)
-	relen = len(response)
+	
 	for x in response['Events']:
 		bin = x['CloudTrailEvent']
 		jsonbin = json.loads(bin)
+		print("jsonbin is set to: %s" % (jsonbin))
 		instance_raw = jsonbin['responseElements']['instancesSet']['items']
 		type = jsonbin['userIdentity']['type']
                 username = jsonbin['userIdentity']['userName']
@@ -38,10 +39,11 @@ def analyse_cloudtrail_output(instanceid,event):
 		agent = jsonbin['userAgent']
                 sourceIPaddress = jsonbin['sourceIPAddress']
 		for x in instance_raw:
-			instanceid.append(x['instanceId'])
+			instanceid.append(str(x['instanceId']))
+			inst = ','.join(instanceid)
 
-		print("username %s (%s via %s) with a client IP of %s, started an ec2 instance (%s) at %s" % (username,type,agent,sourceIPaddress,instanceid,eventTime))
-		instanceid=[]
+		print("username %s (%s via %s) with a client IP of %s, started an ec2 instance (%s) at %s" % (username,type,agent,sourceIPaddress,inst,eventTime))
+		instanceid=[]; inst=""
 
 def lambda_handler(event, context):
         analyse_cloudtrail_output(instanceid,event)
