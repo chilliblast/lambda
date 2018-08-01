@@ -32,13 +32,14 @@ def analyse_ec2_instances(instanceid,event):
 		}
                       ]
         )
-	print("instance variable is set to: %s" % (list(instance['Reservations'][0]['Instances'])))
-
-        for reservations in (instance["Reservations"]):
-                for instance in (reservations["Instances"]):
-                        instance_id = instance['InstanceId'];instance_name = instance['PrivateDnsName']
-			ssh_key = instance['KeyName'];instance_type = instance['InstanceType']
-			print("instance_id is: %s // SSH key used is %s // instance type is: %s" % (instance_id,ssh_key,instance_type))
+        running_state = instance['Reservations'][0]['Instances'][0]['State']['Name']
+	instance_name = instance['Reservations'][0]['Instances'][0]['PrivateDnsName']
+	instance_type = instance['Reservations'][0]['Instances'][0]['InstanceType']
+	ssh_key = instance['Reservations'][0]['Instances'][0]['KeyName']
+	print(running_state)
+	print("instance_id is: %s // SSH key used is %s // instance type is: %s // instance name is: %s // instance state is: %s" % (instanceid,ssh_key,instance_type,instance_name,running_state))
+	#print("\n")
+	#print("instance variable is set to: %s" % (instance))
 
 
 

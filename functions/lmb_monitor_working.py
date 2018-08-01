@@ -5,10 +5,6 @@ import time
 
 start_time = time.strftime("%d%m%Y")
 
-client = boto3.client('cloudtrail')
-
-context = ""; event = ""; instanceid = []
-
 #def send_to_sns_topic(message):
 #        response = sns.publish(
 #                TopicArn='arn:aws:sns:eu-west-1:380222987620:LambdaNotifications',
@@ -16,36 +12,24 @@ context = ""; event = ""; instanceid = []
 #                Subject='CloudTrail Event'
 #                )
 
-def analyse_cloudtrail_output(instanceid,event):
-	response = client.lookup_events(
-		LookupAttributes=[
-			{
-				'AttributeKey':	'EventName',
-				'AttributeValue': 'StartInstances'
-			},
-		],
-		MaxResults=1000,
-	)
-	relen = len(response)
-	for x in response['Events']:
-		bin = x['CloudTrailEvent']
-		jsonbin = json.loads(bin)
-		instance_raw = jsonbin['responseElements']['instancesSet']['items']
-		type = jsonbin['userIdentity']['type']
-                username = jsonbin['userIdentity']['userName']
-                creationdate = jsonbin['userIdentity']['sessionContext']['attributes']['creationDate']
-                eventTime = jsonbin['eventTime']
-		agent = jsonbin['userAgent']
-                sourceIPaddress = jsonbin['sourceIPAddress']
-		for x in instance_raw:
-			instanceid.append(x['instanceId'])
-
-		print("username %s (%s via %s) with a client IP of %s, started an ec2 instance (%s) at %s" % (username,type,agent,sourceIPaddress,instanceid,eventTime))
-		instanceid=[]
+def analyse_config_output(event):
+        print("Full event variable output: %s" %(event))
+        ResourceType = event['detail']['newEvaluationResult']['evaluationResultIdentifier']['evaluationResultQualifier']['resourceType']
+        ResourceId = event['detail']['resourceId']
+        if 'oldEvaluationResult' in event['detail'] and 'newEvaluationResult' in event['detail']:
+                OldComplianceType = event['detail']['oldEvaluationResult']['complianceType']
+                NewComplianceType = event['detail']['newEvaluationResult']['complianceType']
+                if NewComplianceType == 'COMPLIANT' and OldComplianceType == 'NON_COMPLIANT':
+                        print("Previously NON_COMPLIANT Resource %s with Resource ID %s is now COMPLIANT" % (ResourceType,ResourceId))
+                elif NewComplianceType == 'NON_COMPLIANT' and OldComplianceType == 'COMPLIANT':
+                        print("Previously COMPLIANT Resource %s with Resource ID %s is now NON_COMPLIANT" % (ResourceType,ResourceId))
+                elif NewComplianceType == 'NOT_APPLICABLE':
+                        print("Previously NON_COMPLIANT Resource %s with Resource ID %s is no longer applicable (removed or terminated)" % (ResourceType,ResourceId))
+        else:
+                NewComplianceType = event['detail']['newEvaluationResult']['complianceType']
+                print("Resource %s with Resource ID %s is %s" % (ResourceType,ResourceId))
 
 def lambda_handler(event, context):
-        analyse_cloudtrail_output(instanceid,event)
+        analyse_config_output(event)
         return {
         }
-
-lambda_handler(event, context)
