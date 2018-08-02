@@ -1,9 +1,26 @@
+#!/usr/bin/python
 import boto3
 import json
 import os
 import time
 
 start_time = time.strftime("%d%m%Y")
+
+def get_instance_details(ResourceId):
+        ec2 = boto3.client('ec2')
+        instance = ec2.describe_instances(
+                Filters=[
+                {
+                         'Name': 'instance-id',
+                         'Values' : [
+                                ResourceId,
+                         ]
+                }
+                ]
+        )
+        instance_name = instance['Reservations']['Instances']['PrivateDnsName']
+        ssh_key = instance['Reservations']['Instances']['KeyName'];instance_type = instance['Reservations']['Instances']['InstanceType']
+        return(instance_name,instance_type,ssh_key)
 
 def send_to_sns_topic(message):
         sns = boto3.client('sns')
@@ -34,6 +51,9 @@ def analyse_config_output(event):
                 print("Resource %s with Resource ID %s is %s" % (ResourceType,ResourceId,NewComplianceType))
                 message = "Resource %s with Resource ID %s is %s" % (ResourceType,ResourceId,NewComplianceType)
         
+        if ResourceType == 'AWS::EC2::Instance':
+                get_instance_details(ResourceId)
+                message = message + " " + instance_name + " " + instance_type + " " + ssh_key
         send_to_sns_topic(message)
 
 def lambda_handler(event, context):
